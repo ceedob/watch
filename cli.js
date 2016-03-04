@@ -33,8 +33,10 @@ if(argv.ignoreUnreadable || argv.u)
   watchTreeOpts.ignoreUnreadableDir = true
 
 var singleton = false
-if(argv.singleton || argv.s)
- singleton = true
+if(argv.singleton || argv.s){
+  singleton = true;
+}
+
 
 
 if(argv.filter || argv.f) {
@@ -59,16 +61,17 @@ for(i = 0; i < dirLen; i++) {
         skip--
         return
     }
-    if(wait) return
-    
     if(child && singleton){ // Kill the child if we're in singleton mode
       child.kill('SIGINT');
+      waitTime = Math.max(waitTime, 0.5);
+      wait = true;
       child = null;
     }
-    child = execshell(command);
-    child.on("close", function(){
-      child = null;
-    });
+
+    if(wait) return
+    if(child == null || !singleton) {
+      child = execshell(command, {"stdio":'inherit'}, function(e, stdout, stderr){ child = null; });
+    }
 
     if(waitTime > 0) {
       wait = true
