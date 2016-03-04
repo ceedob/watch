@@ -6,7 +6,7 @@ var path = require('path')
 var watch = require('./main.js')
 
 if(argv._.length === 0) {
-  console.error('Usage: watch <command> [...directory] [--wait=<seconds>] [--filter=<file>] [--ignoreDotFiles] [--ignoreUnreadable]')
+  console.error('Usage: watch <command> [...directory] [--wait=<seconds>] [--filter=<file>] [--ignoreDotFiles] [--ignoreUnreadable] [--singleton]')
   process.exit()
 }
 
@@ -32,6 +32,11 @@ if(argv.ignoreDotFiles || argv.d)
 if(argv.ignoreUnreadable || argv.u)
   watchTreeOpts.ignoreUnreadableDir = true
 
+var singleton = false
+if(argv.singleton || argv.s)
+ singleton = true
+
+
 if(argv.filter || argv.f) {
   try {
     watchTreeOpts.filter = require(path.resolve(process.cwd(), argv.filter || argv.f))
@@ -42,6 +47,7 @@ if(argv.filter || argv.f) {
 }
 
 var wait = false
+var child = null;
 
 var dirLen = dirs.length
 var skip = dirLen - 1
@@ -54,8 +60,15 @@ for(i = 0; i < dirLen; i++) {
         return
     }
     if(wait) return
-
-    execshell(command)
+    
+    if(child && singleton){ // Kill the child if we're in singleton mode
+      child.kill('SIGINT');
+      child = null;
+    }
+    child = execshell(command);
+    child.on("close", function(){
+      child = null;
+    });
 
     if(waitTime > 0) {
       wait = true
