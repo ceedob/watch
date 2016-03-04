@@ -66,7 +66,7 @@ for(i = 0; i < dirLen; i++) {
 
     if(wait) return
     if(child && singleton){ // Kill the child if we're in singleton mode
-      child.kill('SIGINT');
+      child.kill('SIGHUP');
     }
     if(child == null || !singleton) {
       child = execshell(command, {"stdio":'inherit'}, function(e, stdout, stderr){ child = null; });
