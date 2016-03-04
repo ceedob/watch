@@ -35,6 +35,7 @@ if(argv.ignoreUnreadable || argv.u)
 var singleton = false
 if(argv.singleton || argv.s){
   singleton = true;
+  waitTime = Math.max(waitTime, 2); // It can take 2 seconds to release a port
 }
 
 
@@ -61,14 +62,12 @@ for(i = 0; i < dirLen; i++) {
         skip--
         return
     }
-    if(child && singleton){ // Kill the child if we're in singleton mode
-      child.kill('SIGINT');
-      waitTime = Math.max(waitTime, 0.5);
-      wait = true;
-      child = null;
-    }
+
 
     if(wait) return
+    if(child && singleton){ // Kill the child if we're in singleton mode
+      child.kill('SIGINT');
+    }
     if(child == null || !singleton) {
       child = execshell(command, {"stdio":'inherit'}, function(e, stdout, stderr){ child = null; });
     }
